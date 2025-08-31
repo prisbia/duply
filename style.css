@@ -804,8 +804,15 @@ body {
 }
 
 .results-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
     font-size: 24px;
     font-weight: 600;
+}
+
+.results-header h2 i {
+    color: var(--primary);
 }
 
 .results-actions {
@@ -814,103 +821,233 @@ body {
     flex-wrap: wrap;
 }
 
-.duplicate-group {
-    background: var(--surface-hover);
-    border-radius: var(--radius-sm);
-    margin-bottom: 20px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-}
-
-.group-header {
+/* Tree Explorer */
+.tree-explorer {
     background: var(--surface);
-    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    max-height: 600px;
+    overflow-y: auto;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.tree-node {
     border-bottom: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 16px;
 }
 
-.group-info {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    flex-wrap: wrap;
-}
-
-.group-badge {
-    background: var(--primary);
-    color: white;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.group-stats {
-    display: flex;
-    gap: 20px;
-    font-size: 14px;
-    color: var(--text-muted);
-    flex-wrap: wrap;
-}
-
-.group-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.file-list {
-    padding: 0;
-}
-
-.file-item {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
-    transition: background-color 0.2s ease;
-}
-
-.file-item:last-child {
+.tree-node:last-child {
     border-bottom: none;
 }
 
-.file-item:hover {
+.tree-directory {
+    background: var(--surface-hover);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.tree-dir-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    user-select: none;
+}
+
+.tree-dir-header:hover {
     background: rgba(99, 102, 241, 0.05);
 }
 
-.file-checkbox {
-    width: 18px;
-    height: 18px;
-    accent-color: var(--primary);
+.tree-dir-header.expanded {
+    background: rgba(99, 102, 241, 0.1);
+    border-bottom: 1px solid var(--primary);
 }
 
-.file-info {
+.tree-expand-icon {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-right: 8px;
+    transition: transform 0.2s ease;
+    min-width: 16px;
+    text-align: center;
+}
+
+.tree-expand-icon.expanded {
+    transform: rotate(90deg);
+}
+
+.tree-folder-icon {
+    font-size: 16px;
+    color: var(--warning);
+    margin-right: 12px;
+}
+
+.tree-dir-info {
     flex: 1;
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    align-items: center;
+    justify-content: space-between;
 }
 
-.file-name {
+.tree-dir-path {
+    font-size: 14px;
     font-weight: 500;
     color: var(--text);
 }
 
-.file-path {
+.tree-dir-stats {
+    display: flex;
+    gap: 16px;
     font-size: 12px;
     color: var(--text-muted);
-    font-family: 'Courier New', monospace;
 }
 
-.file-size {
+.tree-stat-badge {
+    background: var(--primary);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.tree-files {
+    display: none;
+    background: var(--surface);
+}
+
+.tree-directory.expanded .tree-files {
+    display: block;
+}
+
+.tree-file {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px 10px 48px;
+    border-bottom: 1px solid var(--border);
+    transition: background-color 0.2s ease;
+}
+
+.tree-file:last-child {
+    border-bottom: none;
+}
+
+.tree-file:hover {
+    background: var(--surface-hover);
+}
+
+.tree-file.duplicate-highlighted {
+    background: rgba(245, 158, 11, 0.1);
+    border-left: 4px solid var(--warning);
+}
+
+.tree-file-checkbox {
+    margin-right: 12px;
+    accent-color: var(--primary);
+}
+
+.tree-file-icon {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-right: 12px;
+    min-width: 16px;
+}
+
+.tree-file-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.tree-file-name {
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 400;
+}
+
+.tree-file-size {
     font-size: 12px;
     color: var(--text-muted);
-    font-weight: 500;
+    margin-left: 12px;
+}
+
+.tree-file-duplicate {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.duplicate-indicator {
+    background: var(--danger);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.duplicate-group-id {
+    background: var(--text-muted);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 9px;
+    font-weight: 600;
+}
+
+/* Empty state */
+.tree-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+
+.tree-empty i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    color: var(--border);
+}
+
+/* Animations */
+.tree-files {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 500px;
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .tree-dir-stats {
+        flex-direction: column;
+        gap: 4px;
+        align-items: flex-end;
+    }
+    
+    .tree-file {
+        padding-left: 32px;
+    }
+    
+    .tree-file-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    .tree-file-size {
+        margin-left: 0;
+    }
 }
 
 /* Toast Notifications */

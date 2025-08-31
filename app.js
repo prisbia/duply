@@ -36,7 +36,9 @@ class DuplicateFinderWeb {
         this.sortByCountBtn = document.getElementById('sortByCountBtn');
         this.sortBySizeBtn = document.getElementById('sortBySizeBtn');
         this.resultsSection = document.getElementById('resultsSection');
-        this.resultsContainer = document.getElementById('resultsContainer');
+        this.treeExplorer = document.getElementById('treeExplorer');
+        this.expandAllBtn = document.getElementById('expandAllBtn');
+        this.collapseAllBtn = document.getElementById('collapseAllBtn');
         
         this.exportBtn = document.getElementById('exportBtn');
         this.selectAllBtn = document.getElementById('selectAllBtn');
@@ -116,6 +118,15 @@ class DuplicateFinderWeb {
 
         this.sortBySizeBtn.addEventListener('click', () => {
             this.sortDirectories('size');
+        });
+
+        // Tree expansion buttons
+        this.expandAllBtn.addEventListener('click', () => {
+            this.expandAllDirectories();
+        });
+
+        this.collapseAllBtn.addEventListener('click', () => {
+            this.collapseAllDirectories();
         });
     }
 
@@ -322,7 +333,7 @@ class DuplicateFinderWeb {
         }
 
         this.displayDirectorySummary(results.groups);
-        this.displayDuplicateGroups(results.groups);
+        this.displayDirectoryTree(results.groups);
         this.directorySummarySection.style.display = 'block';
         this.resultsSection.style.display = 'block';
         this.showToast(`Se encontraron ${results.groups.length} grupos de duplicados`, 'success');
@@ -462,73 +473,166 @@ class DuplicateFinderWeb {
         }, 500);
     }
 
-    displayDuplicateGroups(groups) {
-        this.resultsContainer.innerHTML = '';
+    displayDirectoryTree(groups) {
+        // Crear estructura de directorios con archivos duplicados
+        const directoryTree = new Map();
+        const fileGroups = new Map(); // Para asociar archivos con sus grupos
         
+        // Organizar archivos por directorio y mantener información de grupo
         groups.forEach(group => {
-            const groupElement = this.createGroupElement(group);
-            this.resultsContainer.appendChild(groupElement);
+            group.files.forEach(file => {
+                const dirPath = this.getDirectoryPath(file.path);
+                
+                if (!directoryTree.has(dirPath)) {
+                    directoryTree.set(dirPath, {
+                        path: dirPath,
+                        files: [],
+                        duplicateCount: 0,
+                        totalSize: 0
+                    });
+                }
+                
+                const dir = directoryTree.get(dirPath);
+                dir.files.push({
+                    ...file,
+                    groupId: group.id,
+                    isDuplicate: true
+                });
+                dir.duplicateCount++;
+                dir.totalSize += file.size;
+                
+                // Mantener referencia del archivo a su grupo
+                fileGroups.set(`${file.path}`, group.id);
+            });
+        });
+        
+        this.renderDirectoryTree(directoryTree);
+    }
+
+    renderDirectoryTree(directoryTree) {
+        this.treeExplorer.innerHTML = '';
+        
+        if (directoryTree.size === 0) {
+            this.treeExplorer.innerHTML = `
+                <div class="tree-empty">
+                    <i class="fas fa-folder-open"></i>
+                    <p>No se encontraron archivos duplicados</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Ordenar directorios alfabéticamente
+        const sortedDirs = Array.from(directoryTree.entries()).sort(([a], [b]) => a.localeCompare(b));
+        
+        sortedDirs.forEach(([dirPath, dirData]) => {
+            const directoryNode = this.createDirectoryNode(dirPath, dirData);
+            this.treeExplorer.appendChild(directoryNode);
         });
     }
 
-    createGroupElement(group) {
-        const groupDiv = document.createElement('div');
-        groupDiv.className = 'duplicate-group';
+    createDirectoryNode(dirPath, dirData) {
+        const node = document.createElement('div');
+        node.className = 'tree-node';
         
-        groupDiv.innerHTML = `
-            <div class="group-header">
-                <div class="group-info">
-                    <span class="group-badge">Grupo ${group.id}</span>
-                    <div class="group-stats">
-                        <span><i class="fas fa-copy"></i> ${group.fileCount} archivos</span>
-                        <span><i class="fas fa-weight-hanging"></i> ${group.fileSize} cada uno</span>
-                        <span><i class="fas fa-trash"></i> ${group.wastedSpace} desperdiciados</span>
+        const displayPath = dirPath === '/' ? 'Raíz' : dirPath;
+        const folderName = dirPath === '/' ? 'Raíz' : dirPath.split('/').pop() || dirPath;
+        
+        node.innerHTML = `
+            <div class="tree-directory">
+                <div class="tree-dir-header" data-path="${dirPath}">
+                    <i class="fas fa-chevron-right tree-expand-icon"></i>
+                    <i class="fas fa-folder tree-folder-icon"></i>
+                    <div class="tree-dir-info">
+                        <span class="tree-dir-path">${folderName}</span>
+                        <div class="tree-dir-stats">
+                            <span class="tree-stat-badge">${dirData.duplicateCount} duplicados</span>
+                            <span>${this.formatBytes(dirData.totalSize)}</span>
+                        </div>
                     </div>
                 </div>
-                <div class="group-actions">
-                    <button class="btn btn-outline btn-sm" onclick="app.selectGroupFiles(${group.id})">
-                        <i class="fas fa-check"></i> Seleccionar
-                    </button>
+                <div class="tree-files">
+                    ${dirData.files.map(file => this.createTreeFileElement(file, dirPath)).join('')}
                 </div>
-            </div>
-            <div class="file-list">
-                ${group.files.map(file => this.createFileElement(file, group.id)).join('')}
             </div>
         `;
         
-        return groupDiv;
+        // Agregar event listener para expandir/contraer
+        const header = node.querySelector('.tree-dir-header');
+        header.addEventListener('click', () => {
+            this.toggleDirectory(node);
+        });
+        
+        return node;
     }
 
-    createFileElement(file, groupId) {
+    createTreeFileElement(file, dirPath) {
+        const fileIcon = this.getFileIcon(file.name);
+        
         return `
-            <div class="file-item">
-                <input type="checkbox" class="file-checkbox" data-group="${groupId}" data-file="${file.name}">
-                <div class="file-info">
-                    <div class="file-name">${file.name}</div>
-                    <div class="file-path">${file.path}</div>
+            <div class="tree-file" data-file-path="${file.path}" data-group="${file.groupId}">
+                <input type="checkbox" class="tree-file-checkbox" data-group="${file.groupId}" data-file="${file.name}">
+                <i class="${fileIcon} tree-file-icon"></i>
+                <div class="tree-file-info">
+                    <span class="tree-file-name">${file.name}</span>
+                    <div class="tree-file-duplicate">
+                        <span class="duplicate-indicator">DUPLICADO</span>
+                        <span class="duplicate-group-id">G${file.groupId}</span>
+                        <span class="tree-file-size">${this.formatBytes(file.size)}</span>
+                    </div>
                 </div>
-                <div class="file-size">${this.formatBytes(file.size)}</div>
             </div>
         `;
     }
 
-    selectGroupFiles(groupId) {
-        const checkboxes = document.querySelectorAll(`input[data-group="${groupId}"]`);
-        const firstCheckbox = checkboxes[0];
-        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+    getFileIcon(fileName) {
+        const ext = fileName.split('.').pop().toLowerCase();
+        const iconMap = {
+            'pdf': 'fas fa-file-pdf',
+            'doc': 'fas fa-file-word', 'docx': 'fas fa-file-word',
+            'xls': 'fas fa-file-excel', 'xlsx': 'fas fa-file-excel',
+            'ppt': 'fas fa-file-powerpoint', 'pptx': 'fas fa-file-powerpoint',
+            'jpg': 'fas fa-file-image', 'jpeg': 'fas fa-file-image', 'png': 'fas fa-file-image', 'gif': 'fas fa-file-image',
+            'mp4': 'fas fa-file-video', 'avi': 'fas fa-file-video', 'mov': 'fas fa-file-video',
+            'mp3': 'fas fa-file-audio', 'wav': 'fas fa-file-audio',
+            'zip': 'fas fa-file-archive', 'rar': 'fas fa-file-archive', '7z': 'fas fa-file-archive',
+            'txt': 'fas fa-file-alt', 'md': 'fas fa-file-alt',
+            'js': 'fas fa-file-code', 'css': 'fas fa-file-code', 'html': 'fas fa-file-code', 'py': 'fas fa-file-code'
+        };
         
-        // If all are checked, uncheck all. Otherwise, check all except first
-        checkboxes.forEach((checkbox, index) => {
-            if (allChecked) {
-                checkbox.checked = false;
-            } else {
-                checkbox.checked = index > 0; // Keep first file unchecked
-            }
+        return iconMap[ext] || 'fas fa-file';
+    }
+
+    toggleDirectory(node) {
+        const directory = node.querySelector('.tree-directory');
+        const header = node.querySelector('.tree-dir-header');
+        const expandIcon = node.querySelector('.tree-expand-icon');
+        
+        directory.classList.toggle('expanded');
+        header.classList.toggle('expanded');
+        expandIcon.classList.toggle('expanded');
+    }
+
+    expandAllDirectories() {
+        const allDirectories = this.treeExplorer.querySelectorAll('.tree-directory');
+        allDirectories.forEach(dir => {
+            dir.classList.add('expanded');
+            dir.querySelector('.tree-dir-header').classList.add('expanded');
+            dir.querySelector('.tree-expand-icon').classList.add('expanded');
+        });
+    }
+
+    collapseAllDirectories() {
+        const allDirectories = this.treeExplorer.querySelectorAll('.tree-directory');
+        allDirectories.forEach(dir => {
+            dir.classList.remove('expanded');
+            dir.querySelector('.tree-dir-header').classList.remove('expanded');
+            dir.querySelector('.tree-expand-icon').classList.remove('expanded');
         });
     }
 
     toggleSelectAll() {
-        const checkboxes = document.querySelectorAll('.file-checkbox');
+        const checkboxes = document.querySelectorAll('.tree-file-checkbox');
         const allChecked = Array.from(checkboxes).every(cb => cb.checked);
         
         checkboxes.forEach(checkbox => {
@@ -572,17 +676,25 @@ class DuplicateFinderWeb {
         text += `Tamaño total: ${stats.totalSize}\n`;
         text += `Espacio desperdiciado: ${stats.wastedSpace}\n\n`;
         
-        const groups = document.querySelectorAll('.duplicate-group');
-        groups.forEach((group, index) => {
-            text += `=== GRUPO ${index + 1} ===\n`;
-            const files = group.querySelectorAll('.file-item');
+        text += `=== ARCHIVOS DUPLICADOS POR DIRECTORIO ===\n`;
+        const directories = document.querySelectorAll('.tree-directory');
+        directories.forEach((directory) => {
+            const dirPath = directory.querySelector('.tree-dir-path').textContent;
+            const duplicateCount = directory.querySelector('.tree-stat-badge').textContent;
+            
+            text += `\n📁 ${dirPath} (${duplicateCount})\n`;
+            text += `${'='.repeat(50)}\n`;
+            
+            const files = directory.querySelectorAll('.tree-file');
             files.forEach(file => {
-                const name = file.querySelector('.file-name').textContent;
-                const path = file.querySelector('.file-path').textContent;
-                const size = file.querySelector('.file-size').textContent;
-                text += `${name} (${size}) - ${path}\n`;
+                const name = file.querySelector('.tree-file-name').textContent;
+                const size = file.querySelector('.tree-file-size').textContent;
+                const groupId = file.querySelector('.duplicate-group-id').textContent;
+                const filePath = file.dataset.filePath;
+                
+                text += `  ${name} (${size}) - ${groupId}\n`;
+                text += `    ${filePath}\n`;
             });
-            text += `\n`;
         });
         
         return text;

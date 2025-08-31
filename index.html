@@ -177,8 +177,16 @@
 
             <div class="results-section" id="resultsSection" style="display: none;">
                 <div class="results-header">
-                    <h2>Archivos Duplicados Encontrados</h2>
+                    <h2><i class="fas fa-folder-tree"></i> Archivos Duplicados por Directorio</h2>
                     <div class="results-actions">
+                        <button id="expandAllBtn" class="btn btn-outline">
+                            <i class="fas fa-expand-alt"></i>
+                            Expandir Todo
+                        </button>
+                        <button id="collapseAllBtn" class="btn btn-outline">
+                            <i class="fas fa-compress-alt"></i>
+                            Contraer Todo
+                        </button>
                         <button id="exportBtn" class="btn btn-outline">
                             <i class="fas fa-download"></i>
                             Exportar Reporte
@@ -189,8 +197,9 @@
                         </button>
                     </div>
                 </div>
-                <div class="results-container" id="resultsContainer">
-                    <!-- Los resultados se insertan dinámicamente aquí -->
+                
+                <div class="tree-explorer" id="treeExplorer">
+                    <!-- El árbol de directorios se inserta aquí -->
                 </div>
             </div>
         </main>
