@@ -22,6 +22,13 @@ Una aplicación web moderna y eficiente para encontrar y gestionar archivos dupl
 - Navegación rápida a archivos específicos
 - Resaltado visual de archivos por carpeta
 
+### 🌳 **Árbol de Directorios (¡NUEVO!)**
+- Vista jerárquica estilo Explorador de Windows
+- Carpetas expandibles/contraíbles con un click
+- Archivos agrupados por directorio
+- Iconos específicos por tipo de archivo
+- Indicadores de duplicados con números de grupo
+
 ### 📈 **Monitoreo en Tiempo Real**
 - Barra de progreso con porcentaje
 - Archivo actual siendo procesado
@@ -37,8 +44,9 @@ Una aplicación web moderna y eficiente para encontrar y gestionar archivos dupl
 4. **Escanear**: Haz clic en "Escanear Duplicados"
 5. **Revisar resultados**: 
    - Ve las estadísticas generales
-   - Revisa directorios con duplicados
-   - Examina grupos de archivos duplicados
+   - Revisa directorios con duplicados (vista de lista)
+   - Explora el árbol de directorios expandible
+   - Examina archivos duplicados por carpeta
 6. **Exportar**: Descarga un reporte completo
 
 ## 🛠️ Tecnologías
@@ -87,6 +95,15 @@ La aplicación utiliza una combinación de dos algoritmos de hash para mayor con
   - Espacio desperdiciado
   - Porcentaje del total
 
+### 🌲 **Árbol Expandible de Archivos**
+- Organización jerárquica como Windows Explorer
+- Carpetas con contadores de duplicados
+- Expansión/contracción con animaciones
+- Iconos por tipo de archivo (PDF, Word, Excel, imágenes, etc.)
+- Controles "Expandir/Contraer Todo"
+- Selección individual por archivo
+- Indicadores visuales de grupos duplicados
+
 ### 📊 **Estadísticas Completas**
 - Archivos totales procesados
 - Grupos de duplicados encontrados
@@ -108,6 +125,9 @@ La aplicación utiliza una combinación de dos algoritmos de hash para mayor con
 - [ ] Más algoritmos de hash
 - [ ] Comparación byte a byte opcional
 - [ ] Integración con servicios en la nube
+- [ ] Búsqueda y filtrado en el árbol de archivos
+- [ ] Vista previa de archivos duplicados
+- [ ] Arrastrar y soltar para reorganizar archivos
 
 ## 🤝 Contribuir
 
